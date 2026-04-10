@@ -1,71 +1,50 @@
-<script setup lang="ts">
+<script lang="ts" setup>
 import { reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
-import api from '@/utils/axios-req'
-import type { Rule } from 'postcss'
+import { gmail_regex, validatePassword } from '@/utils/validate'
+import type { Rule } from 'ant-design-vue/es/form'
+import { fetchUsers, registerUser } from '@/api/user'
 
 const router = useRouter()
+const formState = reactive({ username: '', password: '', confirmPassword: '' })
 
-const formState = reactive({
-  username: '',
-  password: '',
-  confirmPassword: '',
-})
-// Hàm xử lý đăng ký
+const validateConfirmPassword = async (_rule: Rule, value: string) => {
+  if (!value) return Promise.reject(new Error('Vui lòng nhập lại mật khẩu!'))
+  if (value !== formState.password) return Promise.reject(new Error('Mật khẩu không khớp!'))
+  return Promise.resolve()
+}
+
+const rules = {
+  username: [
+    { required: true, message: 'Vui lòng nhập username!', trigger: 'change' },
+    { pattern: gmail_regex, message: 'Email phải có định dạng @gmail.com!', trigger: 'change' },
+  ],
+  password: [{ required: true, validator: validatePassword, trigger: 'change' }],
+  confirmPassword: [{ required: true, validator: validateConfirmPassword, trigger: 'change' }],
+}
+
 const handleRegister = async () => {
   try {
-    // 1.Kiểm tra xem username đã tồn  tại chưa (Tránh trùng lặp)
-    const existingUsers = (await api.get('/users', {
-      params: { username: formState.username },
-    })) as unknown as unknown[]
+    // Check trùng username
+    const existing = await fetchUsers({ username: formState.username })
 
-    if (existingUsers.length > 0) {
-      message.error('Username này đã tồn tại!')
-      return
+    if (existing.length > 0) {
+      return message.error('Username này đã tồn tại!')
     }
 
-    // 2.Gửi request POST để tạo user mới
-    await api.post('/users', {
+    // Đăng ký
+    await registerUser({
       username: formState.username,
       password: formState.password,
     })
-    message.success('Đăng ký thành công! Đang chuyển sang trang Đăng nhập...')
 
-    //Chờ 1.5s rồi chuyển sang trang login
-    setTimeout(() => {
-      router.push('/login')
-    }, 1500)
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      message.error('Lỗi đăng ký: ' + error.message)
-    }
+    message.success('Đăng ký thành công!')
+    setTimeout(() => router.push('/login'), 1500)
+  } catch (err) {
+    console.error(err)
+    message.error('Lỗi hệ thống!')
   }
-}
-
-// Validate mật khẩu > 6 ký tự, 1 chữ hoa, 1 chữ thường, 1 số
-const validatePassword = async (_rule: Rule, value: string) => {
-  if (!value) {
-    return Promise.reject(new Error('Vui lòng nhập mật khẩu!'))
-  }
-  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/
-  if (!passwordRegex.test(value)) {
-    return Promise.reject(
-      new Error('Mật khẩu phải có ít nhất 6 ký tự, bao gồm chữ hoa, chữ thường và số!'),
-    )
-  }
-  return Promise.resolve()
-}
-
-// Validate xác nhận lại mật khẩu
-const validateConfirmPassword = async (_rule: Rule, value: string) => {
-  if (!value) {
-    return Promise.reject(new Error('Vui lòng nhập lại mật khẩu!'))
-  }
-  if (value !== formState.password) {
-    return Promise.reject(new Error('Mật khẩu xác nhận không khớp!'))
-  }
-  return Promise.resolve()
 }
 </script>
 
@@ -76,35 +55,21 @@ const validateConfirmPassword = async (_rule: Rule, value: string) => {
       class="bg-gray-800 p-8 rounded-lg shadow-lg w-96"
       layout="vertical"
       @finish="handleRegister"
+      :rules="rules"
     >
       <h2 class="text-white text-2xl mb-6 text-center">Đăng Ký</h2>
 
-      <a-form-item
-        name="username"
-        :rules="[
-          { required: true, message: 'Vui lòng nhập username!' },
-          {
-            pattern: /^[a-zA-Z0-9._%+-]+@gmail\.com$/,
-            message: 'Email phải có định dạng @gmail.com!',
-          },
-        ]"
-      >
+      <a-form-item name="username">
         <span class="text-white">Username:</span>
         <a-input v-model:value="formState.username" placeholder="Nhập tên đăng nhập" />
       </a-form-item>
 
-      <a-form-item
-        name="password"
-        :rules="[{ required: true, validator: validatePassword, trigger: 'change' }]"
-      >
+      <a-form-item name="password">
         <span class="text-white">Password:</span>
         <a-input-password v-model:value="formState.password" placeholder="Nhập mật khẩu" />
       </a-form-item>
 
-      <a-form-item
-        name="confirmPassword"
-        :rules="[{ required: true, validator: validateConfirmPassword, trigger: 'change' }]"
-      >
+      <a-form-item name="confirmPassword">
         <span class="text-white">Confirm Password:</span>
         <a-input-password v-model:value="formState.confirmPassword" />
       </a-form-item>
