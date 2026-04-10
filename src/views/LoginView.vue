@@ -35,6 +35,11 @@
     <a-form-item :wrapper-col="{ offset: 8, span: 16 }">
       <a-button type="primary" html-type="submit">Submit</a-button>
     </a-form-item>
+    <a-form-item :wrapper-col="{ offset: 5, span: 16 }">
+      <a-button type="link" @click="router.push('/register')">
+        Chưa có tài khoản? Đăng ký ngay
+      </a-button>
+    </a-form-item>
   </a-form>
 </template>
 
