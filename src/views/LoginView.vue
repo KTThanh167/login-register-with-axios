@@ -10,7 +10,14 @@
   >
     <a-form-item
       name="username"
-      :rules="[{ required: true, message: 'Please input your username!' }]"
+      :rules="[
+        { required: true, message: 'Vui lòng nhập tên người dùng!' },
+        {
+          pattern: /^[a-zA-Z0-9._%+-]+@gmail\.com$/,
+          message: 'Email phải có định dạng @gmail.com!',
+          trigger: 'change',
+        },
+      ]"
     >
       <div class="flex items-center gap-4">
         <span class="text-white">Username:</span>
@@ -20,7 +27,14 @@
 
     <a-form-item
       name="password"
-      :rules="[{ required: true, message: 'Please input your password!' }]"
+      :rules="[
+        {
+          required: true,
+          validator: validatePassword,
+          message: 'Mật khẩu phải có ít nhất 6 ký tự, bao gồm chữ hoa, chữ thường và số!',
+          trigger: 'change',
+        },
+      ]"
     >
       <div class="flex items-center gap-4">
         <span class="text-white">Password:</span>
@@ -48,6 +62,7 @@ import { reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import api from '@/utils/axios-req'
+import type { Rule } from 'postcss'
 
 interface FormState {
   username: string
@@ -112,5 +127,19 @@ const handleLogin = async (values: FormState) => {
 
 const handleLoginFailed = (errorInfo: unknown) => {
   console.log('Failed:', errorInfo)
+}
+
+//Hàm validate mật khẩu
+const validatePassword = async (_rule: Rule, value: string) => {
+  if (!value) {
+    return Promise.reject(new Error('Vui lòng nhập mật khẩu!'))
+  }
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/
+  if (!passwordRegex.test(value)) {
+    return Promise.reject(
+      new Error('Mật khẩu phải có ít nhất 6 ký tự, bao gồm chữ hoa, chữ thường và số!'),
+    )
+  }
+  return Promise.resolve()
 }
 </script>

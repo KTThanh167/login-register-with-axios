@@ -1,32 +1,18 @@
 {
   "users": [
     {
-      "id": "1",
-      "username": "thanh",
-      "password": "123"
-    },
-    {
-      "id": "e9f9",
-      "username": "thanh2",
-      "password": "123"
-    },
-    {
-      "id": "e8d6",
-      "username": "thanh3",
-      "password": "123321"
-    },
-    {
-      "id": "56de",
-      "username": "thanh4",
-      "password": "Thanh123"
-    },
-    {
       "id": "96d5",
       "username": "admin@gmail.com",
       "password": "Admin123"
+    },
+    {
+      "username": "thanh@gmail.com",
+      "password": "Thanh123",
+      "id": "Ls3CP-i77EI"
     }
   ],
   "auth": {
     "token": "token-bi-mat-cua-thanh-2026"
-  }
+  },
+  "$schema": "./node_modules/json-server/schema.json"
 }
